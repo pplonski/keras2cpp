@@ -20,7 +20,7 @@ std::vector<float> read_1d_array(std::ifstream &fin, int cols) {
 }
 
 void DataChunk2D::read_from_file(const std::string &fname) {
-  ifstream fin(fname);
+  ifstream fin(fname.c_str());
   fin >> m_depth >> m_rows >> m_cols;
   for(int d = 0; d < m_depth; ++d) {
     vector<vector<float> > tmp_single_depth;
@@ -125,11 +125,16 @@ KerasModel::KerasModel(const string &input_fname) {
   load_weights(input_fname);
 }
 
-
+std::vector<float> KerasModel::compute_output(DataChunk *dc) {
+  cout << "KerasModel compute output" << endl;
+  cout << dc->get_3d().size() << endl;
+  vector<float> r;
+  return r;
+}
 
 void KerasModel::load_weights(const string &input_fname) {
   cout << "Reading model from " << input_fname << endl;
-  ifstream fin(input_fname);
+  ifstream fin(input_fname.c_str());
   string layer_type = "";
   char tmp_char = ' ';
   string tmp_str = "";
@@ -162,9 +167,15 @@ void KerasModel::load_weights(const string &input_fname) {
       return;
     }
     l->load_weights(fin);
-
+    m_layers.push_back(l);
     //if(layer > 3) break;
   }
 
   fin.close();
+}
+
+KerasModel::~KerasModel() {
+  for(int i = 0; i < m_layers.size(); ++i) {
+    delete m_layers[i];
+  }
 }

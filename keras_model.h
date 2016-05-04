@@ -4,12 +4,26 @@
 #include <string>
 #include <vector>
 #include <fstream>
-class DataChunk {
 
+class DataChunk {
+public:
+  virtual std::vector<float> get_1d() {
+    return std::vector<float>();
+  };
+  virtual std::vector<std::vector<std::vector<float> > > get_3d() {
+    return   std::vector<std::vector<std::vector<float> > > ();
+  };
+  virtual void read_from_file(const std::string &fname) {};
 };
 
 class DataChunk2D : public DataChunk {
 public:
+  // return empty vector
+
+  std::vector<std::vector<std::vector<float> > > get_3d() {
+    return data;
+  };
+
   void read_from_file(const std::string &fname);
   std::vector<std::vector<std::vector<float> > > data; // depth, rows, cols
 
@@ -18,9 +32,14 @@ public:
   int m_cols;
 };
 
-class DataChunkFlat : DataChunk {
+class DataChunkFlat : public DataChunk {
 public:
+  void read_from_file(const std::string &fname) {};
   std::vector<float> f;
+  std::vector<float> get_1d() {
+    return f;
+  };
+
 };
 
 class Layer {
@@ -82,7 +101,8 @@ public:
 class KerasModel {
 public:
   KerasModel(const std::string &input_fname);
-  std::vector<float> compute_output();
+  ~KerasModel();
+  std::vector<float> compute_output(DataChunk *dc);
 private:
 
   void load_weights(const std::string &input_fname);
