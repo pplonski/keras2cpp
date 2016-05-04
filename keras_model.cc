@@ -6,6 +6,35 @@
 using namespace std;
 
 
+std::vector<float> read_1d_array(std::ifstream &fin, int cols) {
+  vector<float> arr;
+  float tmp_float;
+  float tmp_char;
+  fin >> tmp_char; // for '['
+  for(int n = 0; n < cols; ++n) {
+    fin >> tmp_float;
+    arr.push_back(tmp_float);
+  }
+  fin >> tmp_char; // for ']'
+  return arr;
+}
+
+void DataChunk2D::read_from_file(const std::string &fname) {
+  ifstream fin(fname);
+  fin >> m_depth >> m_rows >> m_cols;
+  for(int d = 0; d < m_depth; ++d) {
+    vector<vector<float> > tmp_single_depth;
+    for(int r = 0; r < m_rows; ++r) {
+      vector<float> tmp_row = read_1d_array(fin, m_cols);
+      tmp_single_depth.push_back(tmp_row);
+    }
+    data.push_back(tmp_single_depth);
+  }
+  fin.close();
+  cout << "data " << data.size() << "x" << data[0].size() << "x" << data[0][0].size() << endl;
+}
+
+
 void LayerConv2D::load_weights(std::ifstream &fin) {
   char tmp_char = ' ';
   string tmp_str = "";
@@ -80,13 +109,14 @@ void LayerDense::load_weights(std::ifstream &fin) {
     fin >> tmp_char; // for ']'
     weights.push_back(tmp_n);
   }
-
+  cout << "weights " << weights.size() << endl;
   fin >> tmp_char; // for '['
   for(int n = 0; n < m_neurons; ++n) {
     fin >> tmp_float;
-    tmp_n.push_back(tmp_float);
+    bias.push_back(tmp_float);
   }
   fin >> tmp_char; // for ']'
+  cout << "bias " << bias.size() << endl;
 
 }
 
@@ -122,12 +152,18 @@ void KerasModel::load_weights(const string &input_fname) {
       l = new LayerMaxPooling();
     } else if(layer_type == "Flatten") {
       l = new LayerFlatten();
+    } else if(layer_type == "Dense") {
+      l = new LayerDense();
     } else if(layer_type == "Dropout") {
       continue; // we dont need dropout layer in prediciton mode
     }
+    if(l == 0L) {
+      cout << "Layer is empty, maybe it is not defined? Cannot define network." << endl;
+      return;
+    }
     l->load_weights(fin);
 
-    if(layer > 3) break;
+    //if(layer > 3) break;
   }
 
   fin.close();

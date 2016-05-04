@@ -8,9 +8,14 @@ class DataChunk {
 
 };
 
-class DataChunk2D : DataChunk {
+class DataChunk2D : public DataChunk {
 public:
-  std::vector<std::vector<std::vector<float> > > d; // depth, rows, cols
+  void read_from_file(const std::string &fname);
+  std::vector<std::vector<std::vector<float> > > data; // depth, rows, cols
+
+  int m_depth;
+  int m_rows;
+  int m_cols;
 };
 
 class DataChunkFlat : DataChunk {
@@ -23,7 +28,6 @@ public:
   virtual void load_weights(std::ifstream &fin) = 0;
   void compute_output();
 
-  std::vector read_1d_array(std::ifstream &fin);
 };
 
 
@@ -64,12 +68,12 @@ public:
   int m_cols;
 };
 
-class LayerDense : Layer {
+class LayerDense : public Layer {
 public:
   void load_weights(std::ifstream &fin);
   void compute_output();
-  std::vector<std::vector<float> > w; //input, neuron
-  std::vector<float> b; // neuron
+  std::vector<std::vector<float> > weights; //input, neuron
+  std::vector<float> bias; // neuron
 
   int m_input_cnt;
   int m_neurons;
