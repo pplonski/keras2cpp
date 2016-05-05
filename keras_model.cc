@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <fstream>
-
+#include <algorithm>
 using namespace std;
 
 
@@ -90,8 +90,8 @@ void LayerActivation::load_weights(std::ifstream &fin) {
 }
 
 void LayerMaxPooling::load_weights(std::ifstream &fin) {
-  fin >> m_size_x >> m_size_y;
-  cout << "MaxPooling " << m_size_x << "x" << m_size_y << endl;
+  fin >> m_pool_x >> m_pool_y;
+  cout << "MaxPooling " << m_pool_x << "x" << m_pool_y << endl;
 }
 
 void LayerDense::load_weights(std::ifstream &fin) {
@@ -106,16 +106,16 @@ void LayerDense::load_weights(std::ifstream &fin) {
       tmp_n.push_back(tmp_float);
     }
     fin >> tmp_char; // for ']'
-    weights.push_back(tmp_n);
+    m_weights.push_back(tmp_n);
   }
-  cout << "weights " << weights.size() << endl;
+  cout << "weights " << m_weights.size() << endl;
   fin >> tmp_char; // for '['
   for(int n = 0; n < m_neurons; ++n) {
     fin >> tmp_float;
-    bias.push_back(tmp_float);
+    m_bias.push_back(tmp_float);
   }
   fin >> tmp_char; // for ']'
-  cout << "bias " << bias.size() << endl;
+  cout << "bias " << m_bias.size() << endl;
 
 }
 
@@ -125,10 +125,66 @@ KerasModel::KerasModel(const string &input_fname) {
 
 
 DataChunk* LayerFlatten::compute_output(DataChunk* dc) {
-  return dc;
+  vector<vector<vector<float> > > im = dc->get_3d();
+
+  vector<float> y_ret;
+  for(unsigned int i = 0; i < im.size(); ++i) {
+    for(unsigned int j = 0; j < im[0].size(); ++j) {
+      for(unsigned int k = 0; k < im[0][0].size(); ++k) {
+        y_ret.push_back(im[i][j][k]);
+      }
+    }
+  }
+
+  DataChunk *out = new DataChunkFlat();
+  out->set_data(y_ret);
+  return out;
 }
+/*
+def my_pool(im, pool_size=2):
+    y = np.zeros((im.shape[0], im.shape[1], int(im.shape[2]/pool_size), int(im.shape[3]/pool_size)))
+    for im1 in range(0,im.shape[0]):
+        for im2 in range(0,im.shape[1]):
+            for i in range(0,y.shape[2]):
+                start_x = i*pool_size
+                end_x = start_x + pool_size
+                for j in range(0,y.shape[3]):
+                    start_y = j*pool_size
+                    end_y = start_y + pool_size
+                    y[im1, im2, i, j] = np.max(im[im1, im2, start_x:end_x, start_y:end_y])
+    return y
+*/
 DataChunk* LayerMaxPooling::compute_output(DataChunk* dc) {
-  return dc;
+  vector<vector<vector<float> > > im = dc->get_3d();
+  vector<vector<vector<float> > > y_ret;
+  for(unsigned int i = 0; i < im.size(); ++i) {
+    vector<vector<float> > tmp_y;
+    for(unsigned int j = 0; j < (unsigned int)(im[0].size()/m_pool_x); ++j) {
+      tmp_y.push_back(vector<float>((int)(im[0][0].size()/m_pool_y), 0.0));
+    }
+    y_ret.push_back(tmp_y);
+  }
+  for(unsigned int d = 0; d < y_ret.size(); ++d) {
+    for(unsigned int x = 0; x < y_ret[0].size(); ++x) {
+      unsigned int start_x = x*m_pool_x;
+      unsigned int end_x = start_x + m_pool_x;
+      for(unsigned int y = 0; y < y_ret[0][0].size(); ++y) {
+        unsigned int start_y = y*m_pool_y;
+        unsigned int end_y = start_y + m_pool_y;
+
+        vector<float> values;
+        for(unsigned int i = start_x; i < end_x; ++i) {
+          for(unsigned int j = start_y; j < end_y; ++j) {
+            values.push_back(im[d][i][j]);
+          }
+        }
+        y_ret[d][x][y] = *max_element(values.begin(), values.end());
+      }
+    }
+  }
+  DataChunk *out = new DataChunk2D();
+  out->set_data(y_ret);
+  return out;
 }
 DataChunk* LayerActivation::compute_output(DataChunk* dc) {
 
@@ -232,6 +288,10 @@ DataChunk* LayerConv2D::compute_output(DataChunk* dc) {
   return out;
 }
 DataChunk* LayerDense::compute_output(DataChunk* dc) {
+  cout << "weights " << m_weights.size() << endl;
+  cout << "weights " << m_weights[0].size() << endl;
+  cout << "bias " << m_bias.size() << endl;
+
   return dc;
 }
 
@@ -255,7 +315,7 @@ std::vector<float> KerasModel::compute_output(DataChunk *dc) {
     // delete inp
     inp = out;
 
-    if(l > 3) break;
+    if(l > 5) break;
   }
 
 

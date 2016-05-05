@@ -18,7 +18,7 @@ public:
 
   virtual void set_data(std::vector<std::vector<std::vector<float> > > ) {};
   virtual void set_data(std::vector<float> ) {};
-
+  //virtual unsigned int get_count();
   virtual void read_from_file(const std::string &fname) {};
   virtual void show_name() = 0;
 };
@@ -33,6 +33,9 @@ public:
   void show_name() {
     std::cout << "DataChunk2D " << data.size() << "x" << data[0].size() << "x" << data[0][0].size() << std::endl;
   }
+  //unsigned int get_count() {
+  //  return data.size()*data[0].size()*data[0][0].size();
+  //}
 
   void read_from_file(const std::string &fname);
   std::vector<std::vector<std::vector<float> > > data; // depth, rows, cols
@@ -54,7 +57,7 @@ public:
   std::vector<float> get_1d() {
     return f;
   };
-
+  //unsigned int get_count() { return f.size(); }
 };
 
 class Layer {
@@ -85,8 +88,8 @@ public:
   void load_weights(std::ifstream &fin);
   DataChunk* compute_output(DataChunk*);
 
-  int m_size_x;
-  int m_size_y;
+  int m_pool_x;
+  int m_pool_y;
 
 };
 
@@ -120,8 +123,8 @@ public:
 
   void load_weights(std::ifstream &fin);
   DataChunk* compute_output(DataChunk*);
-  std::vector<std::vector<float> > weights; //input, neuron
-  std::vector<float> bias; // neuron
+  std::vector<std::vector<float> > m_weights; //input, neuron
+  std::vector<float> m_bias; // neuron
 
   int m_input_cnt;
   int m_neurons;
