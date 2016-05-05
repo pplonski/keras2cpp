@@ -39,10 +39,10 @@ void LayerConv2D::load_weights(std::ifstream &fin) {
   char tmp_char = ' ';
   string tmp_str = "";
   float tmp_float;
-  fin >> m_kernels >> m_depth >> m_rows >> m_cols;
-  cout << "LayerConv2D " << m_kernels << "x" << m_depth << "x" << m_rows << "x" << m_cols << endl;
+  fin >> m_kernels_cnt >> m_depth >> m_rows >> m_cols;
+  cout << "LayerConv2D " << m_kernels_cnt << "x" << m_depth << "x" << m_rows << "x" << m_cols << endl;
   // reading kernel weights
-  for(int k = 0; k < m_kernels; ++k) {
+  for(int k = 0; k < m_kernels_cnt; ++k) {
     vector<vector<vector<float> > > tmp_depths;
     for(int d = 0; d < m_depth; ++d) {
       vector<vector<float> > tmp_single_depth;
@@ -58,7 +58,7 @@ void LayerConv2D::load_weights(std::ifstream &fin) {
       }
       tmp_depths.push_back(tmp_single_depth);
     }
-    kernels.push_back(tmp_depths);
+    m_kernels.push_back(tmp_depths);
   }
   /*
   for(int i = 0; i < kernels.size(); ++i) {
@@ -72,9 +72,9 @@ void LayerConv2D::load_weights(std::ifstream &fin) {
   }*/
   // reading kernel biases
   fin >> tmp_char; // for '['
-  for(int k = 0; k < m_kernels; ++k) {
+  for(int k = 0; k < m_kernels_cnt; ++k) {
     fin >> tmp_float;
-    bias.push_back(tmp_float);
+    m_bias.push_back(tmp_float);
   }
   fin >> tmp_char; // for ']'
 
@@ -131,6 +131,22 @@ DataChunk* LayerMaxPooling::compute_output(DataChunk* dc) {
   return dc;
 }
 DataChunk* LayerActivation::compute_output(DataChunk* dc) {
+
+  if(dc->get_3d().size() > 0) {
+    vector<vector<vector<float> > > y = dc->get_3d();
+    if(m_activation_type == "relu") {
+      for(unsigned int i = 0; i < y.size(); ++i) {
+        for(unsigned int j = 0; j < y[0].size(); ++j) {
+          for(unsigned int k = 0; k < y[0][0].size(); ++k) {
+            if(y[i][j][k] < 0) y[i][j][k] = 0;
+          }
+        }
+      }
+      DataChunk *out = new DataChunk2D();
+      out->set_data(y);
+      return out;
+    }
+  }
   return dc;
 }
 
@@ -148,9 +164,9 @@ def my_conv(im, k):
     return y
 */
 vector<vector<float> > conv_single_depth(vector<vector<float> > im, vector<vector<float> > k) {
-  int st_x = (k.size() - 1) / 2;
-  int st_y = (k[0].size() - 1) / 2;
-
+  unsigned int st_x = (k.size() - 1) / 2;
+  unsigned int st_y = (k[0].size() - 1) / 2;
+  //cout << "singel conv " << st_x << " " << st_y << endl;
   vector<vector<float> > y;
   for(unsigned int i = 0; i < im.size()-2*st_x; ++i) {
     y.push_back(vector<float>(im[0].size()-2*st_y, 0.0));
@@ -166,9 +182,54 @@ vector<vector<float> > conv_single_depth(vector<vector<float> > im, vector<vecto
   }
   return y;
 }
+/*
+def my_conv_l(im, k, b):
+    st_x = int((k.shape[2]-1)/2.0)
+    st_y = int((k.shape[3]-1)/2.0)
+    y = np.zeros((im.shape[0], k.shape[0], im.shape[2]-2*st_x, im.shape[3]-2*st_y))
+
+    for i in range(0, im.shape[0]):
+        for j in range(0, k.shape[0]):
+            for m in range(0, im.shape[1]): # kanal image
+                w = my_conv(im[i,m], k[j,m])
+                y[i,j] += w
+            y[i,j] += b[j]
+    return y
+*/
 
 DataChunk* LayerConv2D::compute_output(DataChunk* dc) {
-  return dc;
+  unsigned int st_x = (m_kernels[0][0].size()-1)/2;
+  unsigned int st_y = (m_kernels[0][0][0].size()-1)/2;
+  cout << "conv2d " << st_x << " " << st_y << endl;
+
+  vector<vector<vector<float> > > im = dc->get_3d();
+  vector<vector<vector<float> > > y_ret;
+  for(unsigned int i = 0; i < m_kernels.size(); ++i) { // depth
+    vector<vector<float> > tmp;
+    for(unsigned int j = 0; j < im[0].size(); ++j) { // rows
+      tmp.push_back(vector<float>(im[0][0].size(), 0.0));
+    }
+    y_ret.push_back(tmp);
+  }
+  for(unsigned int j = 0; j < m_kernels.size(); ++j) { // loop over kernels
+    for(unsigned int m = 0; m < im.size(); ++m) { // loope over image depth
+      vector<vector<float> > tmp_w = conv_single_depth(im[m], m_kernels[j][m]);
+      for(unsigned int x = 0; x < tmp_w.size(); ++x) {
+        for(unsigned int y = 0; y < tmp_w[0].size(); ++y) {
+          y_ret[j][x][y] += tmp_w[x][y];
+        }
+      }
+    }
+    for(unsigned int x = 0; x < y_ret[0].size(); ++x) {
+      for(unsigned int y = 0; y < y_ret[0][0].size(); ++y) {
+        y_ret[j][x][y] += m_bias[j];
+      }
+    }
+  }
+  DataChunk *out = new DataChunk2D();
+  out->set_data(y_ret);
+
+  return out;
 }
 DataChunk* LayerDense::compute_output(DataChunk* dc) {
   return dc;
@@ -194,7 +255,7 @@ std::vector<float> KerasModel::compute_output(DataChunk *dc) {
     // delete inp
     inp = out;
 
-    break;
+    if(l > 3) break;
   }
 
 

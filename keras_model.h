@@ -15,6 +15,10 @@ public:
   virtual std::vector<std::vector<std::vector<float> > > get_3d() {
     return   std::vector<std::vector<std::vector<float> > > ();
   };
+
+  virtual void set_data(std::vector<std::vector<std::vector<float> > > ) {};
+  virtual void set_data(std::vector<float> ) {};
+
   virtual void read_from_file(const std::string &fname) {};
   virtual void show_name() = 0;
 };
@@ -24,6 +28,8 @@ public:
   std::vector<std::vector<std::vector<float> > > get_3d() {
     return data;
   };
+  virtual void set_data(std::vector<std::vector<std::vector<float> > > d) { data = d; };
+
   void show_name() {
     std::cout << "DataChunk2D " << data.size() << "x" << data[0].size() << "x" << data[0][0].size() << std::endl;
   }
@@ -38,6 +44,7 @@ public:
 
 class DataChunkFlat : public DataChunk {
 public:
+  void set_data(std::vector<float> d) { f = d; };
 
   void show_name() {
     std::cout << "DataChunkFlat " << f.size() << std::endl;
@@ -98,10 +105,10 @@ public:
 
   void load_weights(std::ifstream &fin);
   DataChunk* compute_output(DataChunk*);
-  std::vector<std::vector<std::vector<std::vector<float> > > > kernels; // kernel, depth, rows, cols
-  std::vector<float> bias; // kernel
+  std::vector<std::vector<std::vector<std::vector<float> > > > m_kernels; // kernel, depth, rows, cols
+  std::vector<float> m_bias; // kernel
 
-  int m_kernels;
+  int m_kernels_cnt;
   int m_depth;
   int m_rows;
   int m_cols;
