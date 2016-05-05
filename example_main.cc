@@ -13,6 +13,6 @@ int main() {
   KerasModel m("nn.dat");
   m.compute_output(sample);
 
-  delete sample;
+  //delete sample;
   return 0;
 }

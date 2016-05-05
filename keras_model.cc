@@ -202,6 +202,26 @@ DataChunk* LayerActivation::compute_output(DataChunk* dc) {
       out->set_data(y);
       return out;
     }
+  } else {
+    vector<float> y = dc->get_1d();
+    if(m_activation_type == "relu") {
+      for(unsigned int k = 0; k < y.size(); ++k) {
+        if(y[k] < 0) y[k] = 0;
+      }
+    } else if(m_activation_type == "softmax") {
+      float sum = 0.0;
+      for(unsigned int k = 0; k < y.size(); ++k) {
+        y[k] = exp(y[k]);
+        sum += y[k];
+      }
+      for(unsigned int k = 0; k < y.size(); ++k) {
+        y[k] /= sum;
+      }
+    }
+
+    DataChunk *out = new DataChunkFlat();
+    out->set_data(y);
+    return out;
   }
   return dc;
 }
@@ -282,17 +302,48 @@ DataChunk* LayerConv2D::compute_output(DataChunk* dc) {
       }
     }
   }
+  //
+  for(unsigned int j = 0; j < y_ret.size(); ++j) { // loop over kernels
+    cout << "Depth " << j << endl;
+    for(unsigned int m = 0; m < y_ret[0].size(); ++m) { // loope over image depth
+      for(unsigned int x = 0; x < y_ret[0][0].size(); ++x) {
+        cout << y_ret[j][m][x] << " ";
+      }
+      cout << endl;
+    }
+  }
+  //
+
+
   DataChunk *out = new DataChunk2D();
   out->set_data(y_ret);
-
   return out;
 }
+/*
+def my_dens(im, w, b):
+    y = np.zeros((im.shape[0], w.shape[1]))
+    for i in range(0, im.shape[0]):
+        for n in range(0, w.shape[1]):
+            y[i,n] = b[n]
+            for j in range(0, w.shape[0]):
+                y[i,n] += im[i,j]*w[j,n]
+*/
 DataChunk* LayerDense::compute_output(DataChunk* dc) {
   cout << "weights " << m_weights.size() << endl;
   cout << "weights " << m_weights[0].size() << endl;
   cout << "bias " << m_bias.size() << endl;
+  vector<float> y_ret(m_weights[0].size(), 0.0);
+  vector<float> im = dc->get_1d();
 
-  return dc;
+  for(unsigned int i = 0; i < m_weights[0].size(); ++i) { // iter over neurons
+    for(unsigned int j = 0; j < m_weights.size(); ++j) { // iter over input
+      y_ret[i] += m_weights[i][j] + im[j];
+    }
+    y_ret[i] += m_bias[i];
+  }
+  DataChunk *out = new DataChunkFlat();
+  out->set_data(y_ret);
+  return out;
 }
 
 
@@ -312,15 +363,22 @@ std::vector<float> KerasModel::compute_output(DataChunk *dc) {
     cout << "Output" << endl;
     out->show_name();
     //tmp = out;
-    // delete inp
+    delete inp;
+    inp = 0L;
     inp = out;
 
-    if(l > 5) break;
+    if(l == 0) break;
   }
+  return vector<float>();
+  /*
+  cout << "Output ";
+  vector<float> o = out->get_1d();
+  for(unsigned int i = 0; i < o.size(); ++i) {
+    cout << o[i] << " ";
+  }
+  cout << endl;
 
-
-  vector<float> r;
-  return r;
+  return o;*/
 }
 
 void KerasModel::load_weights(const string &input_fname) {
