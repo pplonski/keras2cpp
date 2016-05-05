@@ -38,7 +38,6 @@ void DataChunk2D::read_from_file(const std::string &fname) {
 void LayerConv2D::load_weights(std::ifstream &fin) {
   char tmp_char = ' ';
   string tmp_str = "";
-  int tmp_int = 0;
   float tmp_float;
   fin >> m_kernels >> m_depth >> m_rows >> m_cols;
   cout << "LayerConv2D " << m_kernels << "x" << m_depth << "x" << m_rows << "x" << m_cols << endl;
@@ -121,13 +120,68 @@ void LayerDense::load_weights(std::ifstream &fin) {
 }
 
 KerasModel::KerasModel(const string &input_fname) {
-  cout << "KerasModel ctor" << endl;
   load_weights(input_fname);
 }
+
+
+DataChunk* LayerFlatten::compute_output(DataChunk* dc) {
+  return dc;
+}
+DataChunk* LayerMaxPooling::compute_output(DataChunk* dc) {
+  return dc;
+}
+DataChunk* LayerActivation::compute_output(DataChunk* dc) {
+  return dc;
+}
+
+
+def my_conv(im, k):
+    st_x = int((k.shape[0]-1)/2.0)
+    st_y = int((k.shape[1]-1)/2.0)
+
+    y = np.zeros((im.shape[0]-2*st_x, im.shape[1]-2*st_y))
+    for i in range(st_x, int(im.shape[0]-st_x)):
+        for j in range(st_y, int(im.shape[0]-st_y)):
+            for k1 in range(0,k.shape[0]):
+                for k2 in range(0,k.shape[1]):
+                    y[i-st_x,j-st_y] += k[k.shape[0]-k1-1][k.shape[1]-k2-1] * im[i-st_x+k1, j-st_y+k2]
+    return y
+
+vector<vector<float> > conv_single_depth(vector<vector<float> > im, vector<vector<float> > k) {
+
+}
+
+DataChunk* LayerConv2D::compute_output(DataChunk* dc) {
+  return dc;
+}
+DataChunk* LayerDense::compute_output(DataChunk* dc) {
+  return dc;
+}
+
 
 std::vector<float> KerasModel::compute_output(DataChunk *dc) {
   cout << "KerasModel compute output" << endl;
   cout << dc->get_3d().size() << endl;
+
+  //DataChunk *tmp;
+  DataChunk *inp = dc;
+  DataChunk *out;
+  for(int l = 0; l < (int)m_layers.size(); ++l) {
+    cout << "-----------------\nOuput from layer " << m_layers[l]->get_name() << endl;
+    out = m_layers[l]->compute_output(inp);
+
+    cout << "Input" << endl;
+    inp->show_name();
+    cout << "Output" << endl;
+    out->show_name();
+    //tmp = out;
+    // delete inp
+    inp = out;
+
+    break;
+  }
+
+
   vector<float> r;
   return r;
 }
@@ -136,10 +190,8 @@ void KerasModel::load_weights(const string &input_fname) {
   cout << "Reading model from " << input_fname << endl;
   ifstream fin(input_fname.c_str());
   string layer_type = "";
-  char tmp_char = ' ';
   string tmp_str = "";
   int tmp_int = 0;
-  float tmp_float = 0;
 
   fin >> tmp_str >> m_layers_cnt;
   cout << "Layers " << m_layers_cnt << endl;
@@ -175,7 +227,7 @@ void KerasModel::load_weights(const string &input_fname) {
 }
 
 KerasModel::~KerasModel() {
-  for(int i = 0; i < m_layers.size(); ++i) {
+  for(int i = 0; i < (int)m_layers.size(); ++i) {
     delete m_layers[i];
   }
 }
