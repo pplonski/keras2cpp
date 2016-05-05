@@ -293,9 +293,12 @@ DataChunk* LayerConv2D::compute_output(DataChunk* dc) {
       for(unsigned int x = 0; x < tmp_w.size(); ++x) {
         for(unsigned int y = 0; y < tmp_w[0].size(); ++y) {
           y_ret[j][x][y] += tmp_w[x][y];
+          cout << tmp_w[x][y] << " ";
         }
+        cout << endl;
       }
     }
+
     for(unsigned int x = 0; x < y_ret[0].size(); ++x) {
       for(unsigned int y = 0; y < y_ret[0][0].size(); ++y) {
         y_ret[j][x][y] += m_bias[j];
