@@ -3,35 +3,56 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <math.h>
 using namespace std;
 
 
 std::vector<float> read_1d_array(std::ifstream &fin, int cols) {
   vector<float> arr;
   float tmp_float;
-  float tmp_char;
+  char tmp_char;
   fin >> tmp_char; // for '['
+  //cout << cols << " | " << tmp_char << endl;
   for(int n = 0; n < cols; ++n) {
     fin >> tmp_float;
+    //cout << tmp_float << " ";
     arr.push_back(tmp_float);
   }
   fin >> tmp_char; // for ']'
+  cout << tmp_char << endl;
+  //for(int c = 0; c < cols; ++c) cout << arr[c] << "|"; cout << endl;
+
   return arr;
 }
 
 void DataChunk2D::read_from_file(const std::string &fname) {
   ifstream fin(fname.c_str());
   fin >> m_depth >> m_rows >> m_cols;
+  cout << m_depth << " " << m_rows << " " << m_cols << endl;
+  cout << "-----------" << endl;
   for(int d = 0; d < m_depth; ++d) {
     vector<vector<float> > tmp_single_depth;
     for(int r = 0; r < m_rows; ++r) {
       vector<float> tmp_row = read_1d_array(fin, m_cols);
+      //for(int c = 0; c < m_cols; ++c) cout << tmp_row[c] << " "; cout << endl;
       tmp_single_depth.push_back(tmp_row);
     }
     data.push_back(tmp_single_depth);
   }
   fin.close();
   cout << "data " << data.size() << "x" << data[0].size() << "x" << data[0][0].size() << endl;
+
+  for(int d = 0; d < m_depth; ++d) {
+    cout << "depth " << d << endl;
+    for(int r = 0; r < m_rows; ++r) {
+      for(int c = 0; c < m_cols; ++c) {
+        cout << data[d][r][c] << " ";
+      }
+      cout << endl;
+    }
+  }
+
+  //exit(1);
 }
 
 
@@ -242,7 +263,21 @@ def my_conv(im, k):
 vector<vector<float> > conv_single_depth(vector<vector<float> > im, vector<vector<float> > k) {
   unsigned int st_x = (k.size() - 1) / 2;
   unsigned int st_y = (k[0].size() - 1) / 2;
-  //cout << "singel conv " << st_x << " " << st_y << endl;
+  cout << "singel conv " << st_x << " " << st_y << endl;
+  for(unsigned int k1 = 0; k1 < k.size(); ++k1) {
+    for(unsigned int k2 = 0; k2 < k[0].size(); ++k2) {
+      cout << k[k1][k2] << " ";
+    }
+    cout << endl;
+  }
+  /*cout << "image" << endl;
+  for(unsigned int i = st_x; i < im.size()-st_x; ++i) {
+    for(unsigned int j = st_y; j < im[0].size()-st_y; ++j) {
+      cout << im[i][j] << " ";
+    }
+    cout << endl;
+  }
+  */
   vector<vector<float> > y;
   for(unsigned int i = 0; i < im.size()-2*st_x; ++i) {
     y.push_back(vector<float>(im[0].size()-2*st_y, 0.0));
@@ -279,23 +314,42 @@ DataChunk* LayerConv2D::compute_output(DataChunk* dc) {
   cout << "conv2d " << st_x << " " << st_y << endl;
 
   vector<vector<vector<float> > > im = dc->get_3d();
+
+  cout << "im data " << im.size() << "x" << im[0].size() << "x" << im[0][0].size() << endl;
+
   vector<vector<vector<float> > > y_ret;
   for(unsigned int i = 0; i < m_kernels.size(); ++i) { // depth
     vector<vector<float> > tmp;
-    for(unsigned int j = 0; j < im[0].size(); ++j) { // rows
-      tmp.push_back(vector<float>(im[0][0].size(), 0.0));
+    for(unsigned int j = 0; j < im[0].size()-2*st_x; ++j) { // rows
+      tmp.push_back(vector<float>(im[0][0].size()-2*st_y, 0.0));
     }
     y_ret.push_back(tmp);
   }
   for(unsigned int j = 0; j < m_kernels.size(); ++j) { // loop over kernels
+    cout << "Kernel " << j << endl;
+    for(unsigned int m = 0; m < m_kernels[0].size(); ++m) { // loope over image depth
+      cout << "Depth " << m << endl;
+      for(unsigned int x = 0; x < m_kernels[0][0].size(); ++x) {
+        for(unsigned int y = 0; y < m_kernels[0][0][0].size(); ++y) {
+          cout << m_kernels[j][m][x][y] << " ";
+        }
+        cout << endl;
+      }
+    }
+  }
+
+
+  for(unsigned int j = 0; j < m_kernels.size(); ++j) { // loop over kernels
+    //cout << "Kernel " << j << endl;
     for(unsigned int m = 0; m < im.size(); ++m) { // loope over image depth
+      //cout << j<< " " << m << endl;
       vector<vector<float> > tmp_w = conv_single_depth(im[m], m_kernels[j][m]);
       for(unsigned int x = 0; x < tmp_w.size(); ++x) {
         for(unsigned int y = 0; y < tmp_w[0].size(); ++y) {
           y_ret[j][x][y] += tmp_w[x][y];
-          cout << tmp_w[x][y] << " ";
+          //cout << tmp_w[x][y] << " ";
         }
-        cout << endl;
+        //cout << endl;
       }
     }
 
@@ -373,7 +427,7 @@ std::vector<float> KerasModel::compute_output(DataChunk *dc) {
     if(l == 0) break;
   }
   return vector<float>();
-  /*
+
   cout << "Output ";
   vector<float> o = out->get_1d();
   for(unsigned int i = 0; i < o.size(); ++i) {
@@ -381,7 +435,7 @@ std::vector<float> KerasModel::compute_output(DataChunk *dc) {
   }
   cout << endl;
 
-  return o;*/
+  return o;
 }
 
 void KerasModel::load_weights(const string &input_fname) {
