@@ -134,7 +134,7 @@ DataChunk* LayerActivation::compute_output(DataChunk* dc) {
   return dc;
 }
 
-
+/*
 def my_conv(im, k):
     st_x = int((k.shape[0]-1)/2.0)
     st_y = int((k.shape[1]-1)/2.0)
@@ -146,9 +146,25 @@ def my_conv(im, k):
                 for k2 in range(0,k.shape[1]):
                     y[i-st_x,j-st_y] += k[k.shape[0]-k1-1][k.shape[1]-k2-1] * im[i-st_x+k1, j-st_y+k2]
     return y
-
+*/
 vector<vector<float> > conv_single_depth(vector<vector<float> > im, vector<vector<float> > k) {
+  int st_x = (k.size() - 1) / 2;
+  int st_y = (k[0].size() - 1) / 2;
 
+  vector<vector<float> > y;
+  for(unsigned int i = 0; i < im.size()-2*st_x; ++i) {
+    y.push_back(vector<float>(im[0].size()-2*st_y, 0.0));
+  }
+  for(unsigned int i = st_x; i < im.size()-st_x; ++i) {
+    for(unsigned int j = st_y; j < im[0].size()-st_y; ++j) {
+      for(unsigned int k1 = 0; k1 < k.size(); ++k1) {
+        for(unsigned int k2 = 0; k2 < k[0].size(); ++k2) {
+          y[i-st_x][j-st_y] += k[k.size()-k1-1][k[0].size()-k2-1] * im[i-st_x+k1][j-st_y+k2];
+        }
+      }
+    }
+  }
+  return y;
 }
 
 DataChunk* LayerConv2D::compute_output(DataChunk* dc) {
