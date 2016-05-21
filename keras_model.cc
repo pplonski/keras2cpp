@@ -263,13 +263,13 @@ def my_conv(im, k):
 vector<vector<float> > conv_single_depth(vector<vector<float> > im, vector<vector<float> > k) {
   unsigned int st_x = (k.size() - 1) / 2;
   unsigned int st_y = (k[0].size() - 1) / 2;
-  cout << "singel conv " << st_x << " " << st_y << endl;
+  /*cout << "single conv " << st_x << " " << st_y << endl;
   for(unsigned int k1 = 0; k1 < k.size(); ++k1) {
     for(unsigned int k2 = 0; k2 < k[0].size(); ++k2) {
       cout << k[k1][k2] << " ";
     }
     cout << endl;
-  }
+  }*/
   /*cout << "image" << endl;
   for(unsigned int i = st_x; i < im.size()-st_x; ++i) {
     for(unsigned int j = st_y; j < im[0].size()-st_y; ++j) {
@@ -325,7 +325,8 @@ DataChunk* LayerConv2D::compute_output(DataChunk* dc) {
     }
     y_ret.push_back(tmp);
   }
-  for(unsigned int j = 0; j < m_kernels.size(); ++j) { // loop over kernels
+
+  /*for(unsigned int j = 0; j < m_kernels.size(); ++j) { // loop over kernels
     cout << "Kernel " << j << endl;
     for(unsigned int m = 0; m < m_kernels[0].size(); ++m) { // loope over image depth
       cout << "Depth " << m << endl;
@@ -336,7 +337,7 @@ DataChunk* LayerConv2D::compute_output(DataChunk* dc) {
         cout << endl;
       }
     }
-  }
+  }*/
 
 
   for(unsigned int j = 0; j < m_kernels.size(); ++j) { // loop over kernels
@@ -360,7 +361,7 @@ DataChunk* LayerConv2D::compute_output(DataChunk* dc) {
     }
   }
   //
-  for(unsigned int j = 0; j < y_ret.size(); ++j) { // loop over kernels
+  /*for(unsigned int j = 0; j < y_ret.size(); ++j) { // loop over kernels
     cout << "Depth " << j << endl;
     for(unsigned int m = 0; m < y_ret[0].size(); ++m) { // loope over image depth
       for(unsigned int x = 0; x < y_ret[0][0].size(); ++x) {
@@ -368,7 +369,7 @@ DataChunk* LayerConv2D::compute_output(DataChunk* dc) {
       }
       cout << endl;
     }
-  }
+  }*/
   //
 
 
@@ -424,9 +425,9 @@ std::vector<float> KerasModel::compute_output(DataChunk *dc) {
     inp = 0L;
     inp = out;
 
-    if(l == 0) break;
+    //if(l == 0) break;
   }
-  return vector<float>();
+  //return vector<float>();
 
   cout << "Output ";
   vector<float> o = out->get_1d();
