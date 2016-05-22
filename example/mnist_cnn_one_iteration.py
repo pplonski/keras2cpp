@@ -70,7 +70,7 @@ model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,
 # store model
 with open('./my_nn_arch.json', 'w') as fout:
     fout.write(model.to_json())
-model.save_weights('./my_nn_weights.h5')
+model.save_weights('./my_nn_weights.h5', overwrite=True)
 
 # store one sample in text file
 with open("./sample_mnist.dat", "w") as fin:
@@ -84,5 +84,6 @@ with open("./sample_mnist.dat", "w") as fin:
 print('Prediction on saved sample:')
 print(str(model.predict(X_train[:1])))
 # on my pc I got:
-#[[ 0.01121394  0.00697352  0.06362978  0.3931751   0.00311367  0.3672581
-#   0.06486111  0.00464667  0.08083764  0.00429046]]
+#[[ 0.01091413  0.00714095  0.06447848  0.39298642  0.00306931  0.36678436
+#   0.0646545   0.00475969  0.08085762  0.00435456]]
+

@@ -23,8 +23,7 @@ std::vector<float> read_1d_array(std::ifstream &fin, int cols) {
 void DataChunk2D::read_from_file(const std::string &fname) {
   ifstream fin(fname.c_str());
   fin >> m_depth >> m_rows >> m_cols;
-  cout << m_depth << " " << m_rows << " " << m_cols << endl;
-  cout << "-----------" << endl;
+
   for(int d = 0; d < m_depth; ++d) {
     vector<vector<float> > tmp_single_depth;
     for(int r = 0; r < m_rows; ++r) {
@@ -34,17 +33,6 @@ void DataChunk2D::read_from_file(const std::string &fname) {
     data.push_back(tmp_single_depth);
   }
   fin.close();
-  cout << "data " << data.size() << "x" << data[0].size() << "x" << data[0][0].size() << endl;
-
-  for(int d = 0; d < m_depth; ++d) {
-    cout << "depth " << d << endl;
-    for(int r = 0; r < m_rows; ++r) {
-      for(int c = 0; c < m_cols; ++c) {
-        cout << data[d][r][c] << " ";
-      }
-      cout << endl;
-    }
-  }
 }
 
 
