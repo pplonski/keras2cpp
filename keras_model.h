@@ -21,6 +21,7 @@ public:
   //virtual unsigned int get_count();
   virtual void read_from_file(const std::string &fname) {};
   virtual void show_name() = 0;
+  virtual void show_values() = 0;
 };
 
 class DataChunk2D : public DataChunk {
@@ -32,6 +33,19 @@ public:
 
   void show_name() {
     std::cout << "DataChunk2D " << data.size() << "x" << data[0].size() << "x" << data[0][0].size() << std::endl;
+  }
+
+  void show_values() {
+    std::cout << "DataChunk2D values:" << std::endl;
+    for(size_t i = 0; i < data.size(); ++i) {
+      std::cout << "Kernel " << i << std::endl;
+      for(size_t j = 0; j < data[0].size(); ++j) {
+        for(size_t k = 0; k < data[0][0].size(); ++k) {
+          std::cout << data[i][j][k] << " ";
+        }
+        std::cout << std::endl;
+      }
+    }
   }
   //unsigned int get_count() {
   //  return data.size()*data[0].size()*data[0][0].size();
@@ -51,6 +65,11 @@ public:
 
   void show_name() {
     std::cout << "DataChunkFlat " << f.size() << std::endl;
+  }
+  void show_values() {
+    std::cout << "DataChunkFlat values:" << std::endl;
+    for(size_t i = 0; i < f.size(); ++i) std::cout << f[i] << " ";
+    std::cout << std::endl;
   }
   void read_from_file(const std::string &fname) {};
   std::vector<float> f;
