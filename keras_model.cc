@@ -7,7 +7,7 @@
 using namespace std;
 
 
-std::vector<float> read_1d_array(std::ifstream &fin, int cols) {
+std::vector<float> keras::read_1d_array(std::ifstream &fin, int cols) {
   vector<float> arr;
   float tmp_float;
   char tmp_char;
@@ -20,14 +20,14 @@ std::vector<float> read_1d_array(std::ifstream &fin, int cols) {
   return arr;
 }
 
-void DataChunk2D::read_from_file(const std::string &fname) {
+void keras::DataChunk2D::read_from_file(const std::string &fname) {
   ifstream fin(fname.c_str());
   fin >> m_depth >> m_rows >> m_cols;
 
   for(int d = 0; d < m_depth; ++d) {
     vector<vector<float> > tmp_single_depth;
     for(int r = 0; r < m_rows; ++r) {
-      vector<float> tmp_row = read_1d_array(fin, m_cols);
+      vector<float> tmp_row = keras::read_1d_array(fin, m_cols);
       tmp_single_depth.push_back(tmp_row);
     }
     data.push_back(tmp_single_depth);
@@ -36,7 +36,7 @@ void DataChunk2D::read_from_file(const std::string &fname) {
 }
 
 
-void LayerConv2D::load_weights(std::ifstream &fin) {
+void keras::LayerConv2D::load_weights(std::ifstream &fin) {
   char tmp_char = ' ';
   string tmp_str = "";
   float tmp_float;
@@ -71,17 +71,17 @@ void LayerConv2D::load_weights(std::ifstream &fin) {
 
 }
 
-void LayerActivation::load_weights(std::ifstream &fin) {
+void keras::LayerActivation::load_weights(std::ifstream &fin) {
   fin >> m_activation_type;
   cout << "Activation type " << m_activation_type << endl;
 }
 
-void LayerMaxPooling::load_weights(std::ifstream &fin) {
+void keras::LayerMaxPooling::load_weights(std::ifstream &fin) {
   fin >> m_pool_x >> m_pool_y;
   cout << "MaxPooling " << m_pool_x << "x" << m_pool_y << endl;
 }
 
-void LayerDense::load_weights(std::ifstream &fin) {
+void keras::LayerDense::load_weights(std::ifstream &fin) {
   fin >> m_input_cnt >> m_neurons;
   float tmp_float;
   char tmp_char = ' ';
@@ -106,12 +106,12 @@ void LayerDense::load_weights(std::ifstream &fin) {
 
 }
 
-KerasModel::KerasModel(const string &input_fname) {
+keras::KerasModel::KerasModel(const string &input_fname) {
   load_weights(input_fname);
 }
 
 
-DataChunk* LayerFlatten::compute_output(DataChunk* dc) {
+keras::DataChunk* keras::LayerFlatten::compute_output(keras::DataChunk* dc) {
   vector<vector<vector<float> > > im = dc->get_3d();
 
   vector<float> y_ret;
@@ -123,13 +123,13 @@ DataChunk* LayerFlatten::compute_output(DataChunk* dc) {
     }
   }
 
-  DataChunk *out = new DataChunkFlat();
+  keras::DataChunk *out = new DataChunkFlat();
   out->set_data(y_ret);
   return out;
 }
 
 
-DataChunk* LayerMaxPooling::compute_output(DataChunk* dc) {
+keras::DataChunk* keras::LayerMaxPooling::compute_output(keras::DataChunk* dc) {
   vector<vector<vector<float> > > im = dc->get_3d();
   vector<vector<vector<float> > > y_ret;
   for(unsigned int i = 0; i < im.size(); ++i) {
@@ -157,18 +157,18 @@ DataChunk* LayerMaxPooling::compute_output(DataChunk* dc) {
       }
     }
   }
-  DataChunk *out = new DataChunk2D();
+  keras::DataChunk *out = new keras::DataChunk2D();
   out->set_data(y_ret);
   return out;
 }
 
-void missing_activation_impl(const string &act) {
+void keras::missing_activation_impl(const string &act) {
   cout << "Activation " << act << " not defined!" << endl;
   cout << "Please add its implementation before use." << endl;
   exit(1);
 }
 
-DataChunk* LayerActivation::compute_output(DataChunk* dc) {
+keras::DataChunk* keras::LayerActivation::compute_output(keras::DataChunk* dc) {
 
   if(dc->get_3d().size() > 0) {
     vector<vector<vector<float> > > y = dc->get_3d();
@@ -180,11 +180,11 @@ DataChunk* LayerActivation::compute_output(DataChunk* dc) {
           }
         }
       }
-      DataChunk *out = new DataChunk2D();
+      keras::DataChunk *out = new keras::DataChunk2D();
       out->set_data(y);
       return out;
     } else {
-      missing_activation_impl(m_activation_type);
+      keras::missing_activation_impl(m_activation_type);
     }
   } else {
     vector<float> y = dc->get_1d();
@@ -202,21 +202,24 @@ DataChunk* LayerActivation::compute_output(DataChunk* dc) {
         y[k] /= sum;
       }
     } else {
-      missing_activation_impl(m_activation_type);
+      keras::missing_activation_impl(m_activation_type);
     }
 
-    DataChunk *out = new DataChunkFlat();
+    keras::DataChunk *out = new DataChunkFlat();
     out->set_data(y);
     return out;
   }
   return dc;
 }
 
-vector<vector<float> > conv_single_depth(vector<vector<float> > im, vector<vector<float> > k) {
+std::vector< std::vector<float> > keras::conv_single_depth(
+	std::vector< std::vector<float> > const & im,
+	std::vector< std::vector<float> > const & k)
+{
   unsigned int st_x = (k.size() - 1) / 2;
   unsigned int st_y = (k[0].size() - 1) / 2;
 
-  vector<vector<float> > y;
+  std::vector< std::vector<float> > y;
   for(unsigned int i = 0; i < im.size()-2*st_x; ++i) {
     y.push_back(vector<float>(im[0].size()-2*st_y, 0.0));
   }
@@ -232,7 +235,7 @@ vector<vector<float> > conv_single_depth(vector<vector<float> > im, vector<vecto
   return y;
 }
 
-DataChunk* LayerConv2D::compute_output(DataChunk* dc) {
+keras::DataChunk* keras::LayerConv2D::compute_output(keras::DataChunk* dc) {
   unsigned int st_x = (m_kernels[0][0].size()-1)/2;
   unsigned int st_y = (m_kernels[0][0][0].size()-1)/2;
   vector<vector<vector<float> > > im = dc->get_3d();
@@ -247,7 +250,7 @@ DataChunk* LayerConv2D::compute_output(DataChunk* dc) {
 
   for(unsigned int j = 0; j < m_kernels.size(); ++j) { // loop over kernels
     for(unsigned int m = 0; m < im.size(); ++m) { // loope over image depth
-      vector<vector<float> > tmp_w = conv_single_depth(im[m], m_kernels[j][m]);
+      vector<vector<float> > tmp_w = keras::conv_single_depth(im[m], m_kernels[j][m]);
       for(unsigned int x = 0; x < tmp_w.size(); ++x) {
         for(unsigned int y = 0; y < tmp_w[0].size(); ++y) {
           y_ret[j][x][y] += tmp_w[x][y];
@@ -262,12 +265,12 @@ DataChunk* LayerConv2D::compute_output(DataChunk* dc) {
     }
   }
 
-  DataChunk *out = new DataChunk2D();
+  keras::DataChunk *out = new keras::DataChunk2D();
   out->set_data(y_ret);
   return out;
 }
 
-DataChunk* LayerDense::compute_output(DataChunk* dc) {
+keras::DataChunk* keras::LayerDense::compute_output(keras::DataChunk* dc) {
   //cout << "weights: input size " << m_weights.size() << endl;
   //cout << "weights: neurons size " << m_weights[0].size() << endl;
   //cout << "bias " << m_bias.size() << endl;
@@ -280,19 +283,19 @@ DataChunk* LayerDense::compute_output(DataChunk* dc) {
     }
     y_ret[i] += m_bias[i];
   }
-  DataChunk *out = new DataChunkFlat();
+  keras::DataChunk *out = new DataChunkFlat();
   out->set_data(y_ret);
   return out;
 }
 
 
-std::vector<float> KerasModel::compute_output(DataChunk *dc) {
+std::vector<float> keras::KerasModel::compute_output(keras::DataChunk *dc) {
   cout << endl << "KerasModel compute output" << endl;
   cout << "Input data size:" << endl;
   dc->show_name();
 
-  DataChunk *inp = dc;
-  DataChunk *out;
+  keras::DataChunk *inp = dc;
+  keras::DataChunk *out = 0;
   for(int l = 0; l < (int)m_layers.size(); ++l) {
     cout << "Processing layer " << m_layers[l]->get_name() << endl;
     out = m_layers[l]->compute_output(inp);
@@ -313,7 +316,7 @@ std::vector<float> KerasModel::compute_output(DataChunk *dc) {
   return out->get_1d();
 }
 
-void KerasModel::load_weights(const string &input_fname) {
+void keras::KerasModel::load_weights(const string &input_fname) {
   cout << "Reading model from " << input_fname << endl;
   ifstream fin(input_fname.c_str());
   string layer_type = "";
@@ -352,8 +355,15 @@ void KerasModel::load_weights(const string &input_fname) {
   fin.close();
 }
 
-KerasModel::~KerasModel() {
+keras::KerasModel::~KerasModel() {
   for(int i = 0; i < (int)m_layers.size(); ++i) {
     delete m_layers[i];
   }
+}
+
+int keras::KerasModel::get_output_length() const
+{
+  int i = m_layers.size() - 1;
+  while ((i > 0) && (m_layers[i]->get_output_units() == 0)) --i;
+  return m_layers[i]->get_output_units();
 }

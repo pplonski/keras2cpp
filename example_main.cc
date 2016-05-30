@@ -3,6 +3,7 @@
 #include <iostream>
 
 using namespace std;
+using namespace keras;
 
 // Step 1
 // Dump keras model and input sample into text files
