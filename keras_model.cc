@@ -170,7 +170,7 @@ void keras::missing_activation_impl(const string &act) {
 
 keras::DataChunk* keras::LayerActivation::compute_output(keras::DataChunk* dc) {
 
-  if(dc->get_3d().size() > 0) {
+  if (dc->get_data_dim() == 3) {
     vector<vector<vector<float> > > y = dc->get_3d();
     if(m_activation_type == "relu") {
       for(unsigned int i = 0; i < y.size(); ++i) {
@@ -186,7 +186,7 @@ keras::DataChunk* keras::LayerActivation::compute_output(keras::DataChunk* dc) {
     } else {
       keras::missing_activation_impl(m_activation_type);
     }
-  } else {
+  } else if (dc->get_data_dim() == 1) { // flat data, use 1D
     vector<float> y = dc->get_1d();
     if(m_activation_type == "relu") {
       for(unsigned int k = 0; k < y.size(); ++k) {
@@ -208,7 +208,8 @@ keras::DataChunk* keras::LayerActivation::compute_output(keras::DataChunk* dc) {
     keras::DataChunk *out = new DataChunkFlat();
     out->set_data(y);
     return out;
-  }
+  } else { throw "data dim not supported"; }
+
   return dc;
 }
 
@@ -221,7 +222,7 @@ std::vector< std::vector<float> > keras::conv_single_depth(
 
   std::vector< std::vector<float> > y;
   for(unsigned int i = 0; i < im.size()-2*st_x; ++i) {
-    y.push_back(vector<float>(im[0].size()-2*st_y, 0.0));
+    y.emplace_back(vector<float>(im[0].size()-2*st_y, 0.0));
   }
   for(unsigned int i = st_x; i < im.size()-st_x; ++i) {
     for(unsigned int j = st_y; j < im[0].size()-st_y; ++j) {
@@ -238,12 +239,16 @@ std::vector< std::vector<float> > keras::conv_single_depth(
 keras::DataChunk* keras::LayerConv2D::compute_output(keras::DataChunk* dc) {
   unsigned int st_x = (m_kernels[0][0].size()-1)/2;
   unsigned int st_y = (m_kernels[0][0][0].size()-1)/2;
-  vector<vector<vector<float> > > im = dc->get_3d();
-  vector<vector<vector<float> > > y_ret;
+  vector< vector< vector<float> > > y_ret;
+  auto const & im = dc->get_3d();
+
+  size_t size_x = im[0].size() - 2 * st_x;
+  size_t size_y = im[0][0].size() - 2 * st_y;
   for(unsigned int i = 0; i < m_kernels.size(); ++i) { // depth
     vector<vector<float> > tmp;
-    for(unsigned int j = 0; j < im[0].size()-2*st_x; ++j) { // rows
-      tmp.push_back(vector<float>(im[0][0].size()-2*st_y, 0.0));
+    tmp.reserve(size_x);
+    for(unsigned int j = 0; j < size_x; ++j) { // rows
+      tmp.emplace_back(vector<float>(size_y, 0.0));
     }
     y_ret.push_back(tmp);
   }
@@ -275,14 +280,17 @@ keras::DataChunk* keras::LayerDense::compute_output(keras::DataChunk* dc) {
   //cout << "weights: neurons size " << m_weights[0].size() << endl;
   //cout << "bias " << m_bias.size() << endl;
   vector<float> y_ret(m_weights[0].size(), 0.0);
-  vector<float> im = dc->get_1d();
+  auto const & im = dc->get_1d();
 
-  for(unsigned int i = 0; i < m_weights[0].size(); ++i) { // iter over neurons
-    for(unsigned int j = 0; j < m_weights.size(); ++j) { // iter over input
+  for (unsigned int j = 0; j < m_weights.size(); ++j) { // iter over input
+    for (unsigned int i = 0; i < m_weights[j].size(); ++i) { // iter over neurons
       y_ret[i] += m_weights[j][i] * im[j];
     }
+  }
+  for (unsigned int i = 0; i < m_weights[0].size(); ++i) { // add biases
     y_ret[i] += m_bias[i];
   }
+
   keras::DataChunk *out = new DataChunkFlat();
   out->set_data(y_ret);
   return out;
@@ -290,14 +298,14 @@ keras::DataChunk* keras::LayerDense::compute_output(keras::DataChunk* dc) {
 
 
 std::vector<float> keras::KerasModel::compute_output(keras::DataChunk *dc) {
-  cout << endl << "KerasModel compute output" << endl;
-  cout << "Input data size:" << endl;
-  dc->show_name();
+  //cout << endl << "KerasModel compute output" << endl;
+  //cout << "Input data size:" << endl;
+  //dc->show_name();
 
   keras::DataChunk *inp = dc;
   keras::DataChunk *out = 0;
   for(int l = 0; l < (int)m_layers.size(); ++l) {
-    cout << "Processing layer " << m_layers[l]->get_name() << endl;
+    //cout << "Processing layer " << m_layers[l]->get_name() << endl;
     out = m_layers[l]->compute_output(inp);
 
     //cout << "Input" << endl;
@@ -310,10 +318,13 @@ std::vector<float> keras::KerasModel::compute_output(keras::DataChunk *dc) {
     inp = out;
   }
 
-  cout << "Output: ";
-  out->show_values();
+  //cout << "Output: ";
+  //out->show_values();
 
-  return out->get_1d();
+  std::vector<float> flat_out = out->get_1d();
+  delete out;
+
+  return flat_out;
 }
 
 void keras::KerasModel::load_weights(const string &input_fname) {
