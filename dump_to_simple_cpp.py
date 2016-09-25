@@ -4,6 +4,7 @@ from keras.models import Sequential, model_from_json
 import json
 import argparse
 
+np.set_printoptions(threshold=np.inf)
 parser = argparse.ArgumentParser(description='This is a simple script to dump Keras model into simple format suitable for porting into pure C++ model')
 
 parser.add_argument('-a', '--architecture', help="JSON with model architecture", required=True)
