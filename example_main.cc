@@ -23,6 +23,7 @@ int main() {
   std::cout << sample->get_3d().size() << std::endl;
   KerasModel m("./example/dumped.nnet");
   m.compute_output(sample);
+  delete sample;
 
   return 0;
 }
