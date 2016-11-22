@@ -10,7 +10,8 @@ namespace keras
 {
 	std::vector<float> read_1d_array(std::ifstream &fin, int cols);
 	void missing_activation_impl(const std::string &act);
-	std::vector< std::vector<float> > conv_single_depth(std::vector< std::vector<float> > const & im, std::vector< std::vector<float> > const & k);
+	std::vector< std::vector<float> > conv_single_depth_valid(std::vector< std::vector<float> > const & im, std::vector< std::vector<float> > const & k);
+	std::vector< std::vector<float> > conv_single_depth_same(std::vector< std::vector<float> > const & im, std::vector< std::vector<float> > const & k);
 
 	class DataChunk;
 	class DataChunk2D;
@@ -164,6 +165,7 @@ public:
   virtual unsigned int get_input_cols() const { return m_cols; }
   virtual unsigned int get_output_units() const { return m_kernels_cnt; }
 
+  std::string m_border_mode;
   int m_kernels_cnt;
   int m_depth;
   int m_rows;

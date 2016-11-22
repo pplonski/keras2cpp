@@ -29,6 +29,7 @@ with open(args.output, 'w') as fout:
 
     layers = []
     for ind, l in enumerate(arch["config"]):
+        print ind, l
         fout.write('layer ' + str(ind) + ' ' + l['class_name'] + '\n')
 
         print str(ind), l['class_name']
@@ -42,7 +43,7 @@ with open(args.output, 'w') as fout:
 
             W = model.layers[ind].get_weights()[0]
             print W.shape
-            fout.write(str(W.shape[0]) + ' ' + str(W.shape[1]) + ' ' + str(W.shape[2]) + ' ' + str(W.shape[3]) + '\n')
+            fout.write(str(W.shape[0]) + ' ' + str(W.shape[1]) + ' ' + str(W.shape[2]) + ' ' + str(W.shape[3]) + ' ' + l['config']['border_mode'] + '\n')
 
             for i in range(W.shape[0]):
                 for j in range(W.shape[1]):
