@@ -40,7 +40,10 @@ void keras::LayerConv2D::load_weights(std::ifstream &fin) {
   char tmp_char = ' ';
   string tmp_str = "";
   float tmp_float;
+  bool skip = false;
   fin >> m_kernels_cnt >> m_depth >> m_rows >> m_cols >> m_border_mode;
+  if (m_border_mode == "[") { m_border_mode = "valid"; skip = true; }
+
   cout << "LayerConv2D " << m_kernels_cnt << "x" << m_depth << "x" << m_rows <<
             "x" << m_cols << " border_mode " << m_border_mode << endl;
   // reading kernel weights
@@ -49,7 +52,8 @@ void keras::LayerConv2D::load_weights(std::ifstream &fin) {
     for(int d = 0; d < m_depth; ++d) {
       vector<vector<float> > tmp_single_depth;
       for(int r = 0; r < m_rows; ++r) {
-        fin >> tmp_char; // for '['
+        if (!skip) { fin >> tmp_char; } // for '['
+        else { skip = false; }
         vector<float> tmp_row;
         for(int c = 0; c < m_cols; ++c) {
           fin >> tmp_float;
