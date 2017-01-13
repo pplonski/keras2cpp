@@ -19,4 +19,9 @@ It is working with the Theano backend - support for Tensorflow will be added soo
 
 #Testing
 
-If you want to test dumping for your network, please use `test_run.sh` script. Please provide there your network architecture and weights. 
+If you want to test dumping for your network, please use `test_run.sh` script. Please provide there your network architecture and weights. The script do following job:
+
+ 1. Dump network into text file.
+ 2. Generate random sample.
+ 3. Compute predictions from keras and keras2cpp on generated sample.
+ 4. Compare predictions.
