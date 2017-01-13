@@ -191,7 +191,7 @@ public:
 
 class keras::KerasModel {
 public:
-  KerasModel(const std::string &input_fname);
+  KerasModel(const std::string &input_fname, bool verbose);
   ~KerasModel();
   std::vector<float> compute_output(keras::DataChunk *dc);
 
@@ -204,6 +204,7 @@ private:
   void load_weights(const std::string &input_fname);
   int m_layers_cnt; // number of layers
   std::vector<Layer *> m_layers; // container with layers
+  bool m_verbose;
 
 };
 

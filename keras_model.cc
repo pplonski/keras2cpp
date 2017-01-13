@@ -44,8 +44,8 @@ void keras::LayerConv2D::load_weights(std::ifstream &fin) {
   fin >> m_kernels_cnt >> m_depth >> m_rows >> m_cols >> m_border_mode;
   if (m_border_mode == "[") { m_border_mode = "valid"; skip = true; }
 
-  cout << "LayerConv2D " << m_kernels_cnt << "x" << m_depth << "x" << m_rows <<
-            "x" << m_cols << " border_mode " << m_border_mode << endl;
+  //cout << "LayerConv2D " << m_kernels_cnt << "x" << m_depth << "x" << m_rows <<
+  //            "x" << m_cols << " border_mode " << m_border_mode << endl;
   // reading kernel weights
   for(int k = 0; k < m_kernels_cnt; ++k) {
     vector<vector<vector<float> > > tmp_depths;
@@ -78,12 +78,12 @@ void keras::LayerConv2D::load_weights(std::ifstream &fin) {
 
 void keras::LayerActivation::load_weights(std::ifstream &fin) {
   fin >> m_activation_type;
-  cout << "Activation type " << m_activation_type << endl;
+  //cout << "Activation type " << m_activation_type << endl;
 }
 
 void keras::LayerMaxPooling::load_weights(std::ifstream &fin) {
   fin >> m_pool_x >> m_pool_y;
-  cout << "MaxPooling " << m_pool_x << "x" << m_pool_y << endl;
+  //cout << "MaxPooling " << m_pool_x << "x" << m_pool_y << endl;
 }
 
 void keras::LayerDense::load_weights(std::ifstream &fin) {
@@ -100,18 +100,19 @@ void keras::LayerDense::load_weights(std::ifstream &fin) {
     fin >> tmp_char; // for ']'
     m_weights.push_back(tmp_n);
   }
-  cout << "weights " << m_weights.size() << endl;
+  //cout << "weights " << m_weights.size() << endl;
   fin >> tmp_char; // for '['
   for(int n = 0; n < m_neurons; ++n) {
     fin >> tmp_float;
     m_bias.push_back(tmp_float);
   }
   fin >> tmp_char; // for ']'
-  cout << "bias " << m_bias.size() << endl;
+  //cout << "bias " << m_bias.size() << endl;
 
 }
 
-keras::KerasModel::KerasModel(const string &input_fname) {
+keras::KerasModel::KerasModel(const string &input_fname, bool verbose)
+                                                       : m_verbose(verbose) {
   load_weights(input_fname);
 }
 
@@ -361,9 +362,6 @@ std::vector<float> keras::KerasModel::compute_output(keras::DataChunk *dc) {
     inp = out;
   }
 
-  cout << "Output: ";
-  out->show_values();
-
   std::vector<float> flat_out = out->get_1d();
   delete out;
 
@@ -371,18 +369,18 @@ std::vector<float> keras::KerasModel::compute_output(keras::DataChunk *dc) {
 }
 
 void keras::KerasModel::load_weights(const string &input_fname) {
-  cout << "Reading model from " << input_fname << endl;
+  if(m_verbose) cout << "Reading model from " << input_fname << endl;
   ifstream fin(input_fname.c_str());
   string layer_type = "";
   string tmp_str = "";
   int tmp_int = 0;
 
   fin >> tmp_str >> m_layers_cnt;
-  cout << "Layers " << m_layers_cnt << endl;
+  if(m_verbose) cout << "Layers " << m_layers_cnt << endl;
 
   for(int layer = 0; layer < m_layers_cnt; ++layer) { // iterate over layers
     fin >> tmp_str >> tmp_int >> layer_type;
-    cout << "Layer " << tmp_int << " " << layer_type << endl;
+    if(m_verbose) cout << "Layer " << tmp_int << " " << layer_type << endl;
 
     Layer *l = 0L;
     if(layer_type == "Convolution2D") {
