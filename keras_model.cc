@@ -228,8 +228,9 @@ std::vector< std::vector<float> > keras::conv_single_depth_valid(
 	std::vector< std::vector<float> > const & im,
 	std::vector< std::vector<float> > const & k)
 {
-  unsigned int st_x = (k.size() - 1) >> 1;
-  unsigned int st_y = (k[0].size() - 1) >> 1;
+  size_t k1_size = k.size(), k2_size = k[0].size();
+  unsigned int st_x = (k1_size - 1) >> 1;
+  unsigned int st_y = (k2_size - 1) >> 1;
 
   std::vector< std::vector<float> > y(im.size() - 2*st_x, vector<float>(im[0].size() - 2*st_y, 0));
 
@@ -256,8 +257,9 @@ std::vector< std::vector<float> > keras::conv_single_depth_same(
 	std::vector< std::vector<float> > const & im,
 	std::vector< std::vector<float> > const & k)
 {
-  unsigned int st_x = (k.size() - 1) >> 1;
-  unsigned int st_y = (k[0].size() - 1) >> 1;
+  size_t k1_size = k.size(), k2_size = k[0].size();
+  unsigned int st_x = (k1_size - 1) >> 1;
+  unsigned int st_y = (k2_size - 1) >> 1;
 
   size_t max_imc = im.size() - 1;
   size_t max_imr = im[0].size() - 1;
