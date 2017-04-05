@@ -210,6 +210,10 @@ keras::DataChunk* keras::LayerActivation::compute_output(keras::DataChunk* dc) {
       for(unsigned int k = 0; k < y.size(); ++k) {
         y[k] /= sum;
       }
+    } else if(m_activation_type == "sigmoid") {
+      for(unsigned int k = 0; k < y.size(); ++k) {
+        y[k] = 1/(1+exp(-y[k]));
+      }
     } else {
       keras::missing_activation_impl(m_activation_type);
     }
