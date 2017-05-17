@@ -243,10 +243,10 @@ std::vector< std::vector<float> > keras::conv_single_depth_valid(
 
       float sum = 0;
       for(unsigned int k1 = 0; k1 < k.size(); ++k1) {
-        const float * k_data = k[k1_size-k1-1].data();
-        const float * im_data = im[i-st_x+k1].data();
+        //const float * k_data = k[k1_size-k1-1].data();
+        //const float * im_data = im[i-st_x+k1].data();
         for(unsigned int k2 = 0; k2 < k[0].size(); ++k2) {
-          sum += k_data[k2_size-k2-1] * im_data[j-st_y+k2];
+          sum += k[k1_size-k1-1][k2_size-k2-1] * im[i-st_x+k1][j-st_y+k2];
         }
       }
       y[i-st_x][j-st_y] = sum;
@@ -271,18 +271,17 @@ std::vector< std::vector<float> > keras::conv_single_depth_same(
 
   for(unsigned int i = 0; i < im.size(); ++i) {
     for(unsigned int j = 0; j < im[0].size(); ++j) {
-
       float sum = 0;
       for(unsigned int k1 = 0; k1 < k.size(); ++k1) {
-        const float * k_data = k[k1_size-k1-1].data();
-        const float * im_data = im[i-st_x+k1].data();
+        //const float * k_data = k[k1_size-k1-1].data(); // it is not working ...
+        //const float * im_data = im[i-st_x+k1].data();
         for(unsigned int k2 = 0; k2 < k[0].size(); ++k2) {
           if(i-st_x+k1 < 0) continue;
           if(i-st_x+k1 > max_imc) continue;
           if(j-st_y+k2 < 0) continue;
           if(j-st_y+k2 > max_imr) continue;
 
-          sum += k_data[k2_size-k2-1] * im_data[j-st_y+k2];
+          sum += k[k1_size-k1-1][k2_size-k2-1] * im[i-st_x+k1][j-st_y+k2];
         }
       }
       y[i][j] = sum;
@@ -375,7 +374,7 @@ keras::DataChunk* keras::LayerDense::compute_output(keras::DataChunk* dc) {
 std::vector<float> keras::KerasModel::compute_output(keras::DataChunk *dc) {
   //cout << endl << "KerasModel compute output" << endl;
   //cout << "Input data size:" << endl;
-  //dc->show_name();
+  dc->show_name();
 
   keras::DataChunk *inp = dc;
   keras::DataChunk *out = 0;
@@ -394,6 +393,7 @@ std::vector<float> keras::KerasModel::compute_output(keras::DataChunk *dc) {
   }
 
   std::vector<float> flat_out = out->get_1d();
+  out->show_values();
   delete out;
 
   return flat_out;
