@@ -4,20 +4,20 @@ This is a bunch of code to port Keras neural network model into pure C++. Neural
 
 It is working with the Theano backend - support for Tensorflow will be added soon.
 
-#Usage
+## Usage
 
  1. Save your network weights and architecture.
  2. Dump network structure to plain text file with `dump_to_simple_cpp.py` script.
  3. Use network with code from `keras_model.h` and `keras_model.cc` files - see example below.
 
-#Example
+## Example
 
  1. Run one iteration of simple CNN on MNIST data with `example/mnist_cnn_one_iteration.py` script. It will produce files with architecture `example/my_nn_arch.json` and weights in HDF5 format `example/my_nn_weights.h5`.
  2. Dump network to plain text file `python dump_to_simple_cpp.py -a example/my_nn_arch.json -w example/my_nn_weights.h5 -o example/dumped.nnet`.
  3. Compile example `g++ -std=c++11 keras_model.cc example_main.cc` - see code in `example_main.cc`.
  4. Run binary `./a.out` - you shoul get the same output as in step one from Keras.
 
-#Testing
+## Testing
 
 If you want to test dumping for your network, please use `test_run.sh` script. Please provide there your network architecture and weights. The script do following job:
 
