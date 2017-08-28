@@ -3,8 +3,8 @@
 echo 'Test for CNN dumping'
 
 # Parameters
-INPUT_ARCH="../../keras2cpp_nets/th/52c55ce6-201b-4ce4-ad53-68b86d79804f.cnn.architecture.json"
-INPUT_WEIGHTS="../../keras2cpp_nets/th/52c55ce6-201b-4ce4-ad53-68b86d79804f.cnn.model.h5"
+INPUT_ARCH="example/my_nn_arch.json"
+INPUT_WEIGHTS="example/my_nn_weights.h5"
 
 DUMPED_CNN="test_cnn.dumped"
 DATA_SAMPLE="test_random_input.dat"
