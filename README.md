@@ -25,3 +25,7 @@ If you want to test dumping for your network, please use `test_run.sh` script. P
  2. Generate random sample.
  3. Compute predictions from keras and keras2cpp on generated sample.
  4. Compare predictions.
+
+## Similar repositories
+
+- Keras to C++ with usage of Tensorflow C API https://github.com/aljabr0/from-keras-to-c
