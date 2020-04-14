@@ -2,7 +2,7 @@
 
 This is a bunch of code to port Keras neural network model into pure C++. Neural network weights and architecture are stored in plain text file and input is presented as `vector<vector<vector<float> > >` in case of image. The code is prepared to support simple Convolutional network (from MNIST example) but can be easily extended. There are implemented only ReLU and Softmax activations.
 
-It is working with the Theano backend - support for Tensorflow will be added soon.
+It is working with the Theano backend.
 
 ## Usage
 
